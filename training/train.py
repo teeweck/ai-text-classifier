@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 
 # Load dataset
-data = pd.read_csv("../data/raw/sentiment.csv")
+data = pd.read_csv("data/raw/sentiment.csv")
 
 texts = data["text"]
 labels = data["label"]
@@ -33,3 +33,16 @@ X_test_vec = vectorizer.transform(X_test)
 # Model training
 model = LogisticRegression(max_iter=1000)
 model.fit(X_train_vec, y_train)
+
+# Model evaluation
+predictions = model.predict(X_test_vec)
+
+accuracy = accuracy_score(y_test, predictions)
+print(f"Accuracy: {accuracy:.2f}")
+
+print(classification_report(y_test, predictions))
+
+# Save Model artifacts
+joblib.dump(model, "model/model.pkl")
+joblib.dump(vectorizer, "model/vectorizer.pkl")
+print("Model and vectorizer saved successfully.")
