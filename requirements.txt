@@ -1,4 +1,10 @@
+# Data processing dependencies
 pandas
 joblib
 
+# Model training dependencies
 scikit-learn
+
+# Backend dependencies
+fastapi # API framework
+uvicorn # Asynchronous Server Gateway Interface(ASGI) server
