@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import joblib
 
 # Load model and vectorizer at startup
@@ -10,7 +10,11 @@ app = FastAPI(title="AI Text Classifier")
 
 # Define request schema
 class PredictionRequest(BaseModel):
-    text: str
+    text: str = Field(
+        ...,
+        description="Input text to classify",
+        examples=["I love this product"]
+    )
 
 # Prediction endpoint
 @app.post("/predict")
