@@ -61,3 +61,26 @@ Decorator = Routing + HTTP semantics\
 Pydantic Model = Contract\
 FastAPI = Glue\
 Swagger UI = Visualization
+
+## Docker for backend
+
+Building the Docker Image:
+
+- Reads `backend/Dockerfile`
+- Builds an immutable image
+- Tags it as `ai-backend`
+
+From the `root` directory, run:
+
+```bash
+docker build -t ai-backend -f backend/Dockerfile .
+```
+
+Run the container
+
+```bash
+docker run -p 8000:8000 ai-backend
+
+mapping:
+host:8000 → container:8000
+```
