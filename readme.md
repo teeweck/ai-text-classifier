@@ -40,6 +40,12 @@ From the `backend/` directory, run:
 uvicorn app:app --reload --port 8000
 ```
 
+To restart the server:
+
+```bash
+uvicorn app:app --reload
+```
+
 Open the API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## What you get
@@ -47,3 +53,11 @@ Open the API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 - Live API
 - Auto-generated Swagger UI
 - Interactive testing
+
+## Mental model
+
+Endpoint = Function\
+Decorator = Routing + HTTP semantics\
+Pydantic Model = Contract\
+FastAPI = Glue\
+Swagger UI = Visualization
