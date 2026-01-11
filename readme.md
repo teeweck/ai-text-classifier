@@ -84,3 +84,25 @@ docker run -p 8000:8000 ai-backend
 mapping:
 host:8000 → container:8000
 ```
+
+## Docker for frontend
+
+Building the Docker Image (frontend):
+
+From the `root` directory, run:
+
+```bash
+docker build -t ai-frontend -f frontend/Dockerfile .
+```
+
+Run the container
+
+```bash
+docker run -p 3000:3000 ai-frontend
+```
+
+Open browser:
+
+```bash
+http://localhost:3000
+```
