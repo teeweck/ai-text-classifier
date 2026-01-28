@@ -43,6 +43,6 @@ print(f"Accuracy: {accuracy:.2f}")
 print(classification_report(y_test, predictions))
 
 # Save Model artifacts
-joblib.dump(model, "model/model.pkl")
-joblib.dump(vectorizer, "model/vectorizer.pkl")
+joblib.dump(model, "backend/model/model.pkl")
+joblib.dump(vectorizer, "backend/model/vectorizer.pkl")
 print("Model and vectorizer saved successfully.")
