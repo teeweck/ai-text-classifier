@@ -106,3 +106,20 @@ Open browser:
 ```bash
 http://localhost:3000
 ```
+
+## Docker compose
+
+Running docker compose (backend + frontend):
+
+From the `root` directory, run:
+
+```bash
+docker compose up --build
+```
+
+Docker will:
+
+1. Build backend image
+2. Build frontend image
+3. Created shared network
+4. Start both containers

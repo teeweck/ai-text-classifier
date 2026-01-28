@@ -11,10 +11,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 5️⃣ Copy backend code
-COPY backend/app.py .
+COPY app.py .
 
 # 6️⃣ Copy trained model artifacts
-COPY model /model
+COPY model ./model
 
 # 7️⃣ Expose port
 EXPOSE 8000

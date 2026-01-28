@@ -2,12 +2,28 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from typing import List
 import joblib
+import os
+
+from fastapi.middleware.cors import CORSMiddleware
+
+model_file_path = os.path.dirname(__file__) + "/model/model.pkl"
+vectorizer_file_path = os.path.dirname(__file__) + "/model/vectorizer.pkl"
 
 # Load model and vectorizer at startup
-model = joblib.load("../model/model.pkl")
-vectorizer = joblib.load("../model/vectorizer.pkl")
+model = joblib.load(model_file_path)
+vectorizer = joblib.load(vectorizer_file_path)
 
 app = FastAPI(title="AI Text Classifier")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],   # includes OPTIONS
+    allow_headers=["*"],
+)
 
 # Define request schema - Input for AI model to classify
 class PredictionRequest(BaseModel):
