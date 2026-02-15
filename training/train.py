@@ -1,5 +1,8 @@
 import pandas as pd
 import joblib
+import sklearn
+from datetime import datetime
+from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -43,6 +46,32 @@ print(f"Accuracy: {accuracy:.2f}")
 print(classification_report(y_test, predictions))
 
 # Save Model artifacts
-joblib.dump(model, "backend/model/model.pkl")
-joblib.dump(vectorizer, "backend/model/vectorizer.pkl")
-print("Model and vectorizer saved successfully.")
+MODEL_VERSION = "v1"
+
+artifact = {
+    "model": model,
+    "vectorizer": vectorizer,
+    "labels": model.classes_.tolist(),
+    "sklearn_version": sklearn.__version__,
+    "created_at": datetime.now().isoformat(),
+    "version": MODEL_VERSION,
+}
+
+current_file_path = Path(__file__).resolve()
+current_directory = current_file_path.parent.parent
+new_dir = current_directory / f"backend/model/{MODEL_VERSION}"
+
+print(f"current file path: {current_file_path}")
+print(f"current directory: {current_directory}")
+print(f"Prospective directory: {new_dir}")
+
+try:
+    new_dir.mkdir()
+    print(f"Folder '{new_dir}' created.")
+except:
+    print(f"Folder '{new_dir}' already exists.")
+
+joblib.dump(artifact, f"{new_dir}/artifact.pkl")
+joblib.dump(model, f"{new_dir}/model.pkl")
+joblib.dump(vectorizer, f"{new_dir}/vectorizer.pkl")
+print("Model,vectorizer and artifacts saved successfully.")
