@@ -4,6 +4,9 @@ FROM python:3.13-slim
 # 2️⃣ Set working directory inside container
 WORKDIR /app
 
+# Install curl and other system dependencies
+RUN apt-get update && apt-get install -y curl
+
 # 3️⃣ Copy dependency list first (for caching)
 COPY requirements.txt .
 

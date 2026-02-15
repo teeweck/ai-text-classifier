@@ -65,3 +65,12 @@ def get_model_info():
         "vectorizer": "TF-IDF",
         "version": "1.0.0"
     }
+
+# Backend health API
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "model_loaded": model is not None,
+        "vectorizer_loaded": vectorizer is not None,
+    }
