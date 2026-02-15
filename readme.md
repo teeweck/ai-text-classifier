@@ -1,6 +1,6 @@
 # AI Text Classifier
 
-A small project to train and serve a text classification model.
+A small project to train and serve a text classification model. The purpose of the project is to understand how to deploy a simple AI model.
 
 ## Project structure
 
@@ -73,16 +73,16 @@ Building the Docker Image:
 From the `root` directory, run:
 
 ```bash
-docker build -t ai-backend -f backend/Dockerfile .
+docker compose build backend
 ```
 
 Run the container
 
-```bash
-docker run -p 8000:8000 ai-backend
+- Runs the backend container in detached mode (in the background)
+- Only runs the backend service
 
-mapping:
-host:8000 → container:8000
+```bash
+docker compose up -d backend
 ```
 
 ## Docker for frontend
@@ -92,13 +92,13 @@ Building the Docker Image (frontend):
 From the `root` directory, run:
 
 ```bash
-docker build -t ai-frontend -f frontend/Dockerfile .
+docker compose build frontend
 ```
 
 Run the container
 
 ```bash
-docker run -p 3000:3000 ai-frontend
+docker compose up -d frontend
 ```
 
 Open browser:
@@ -106,6 +106,11 @@ Open browser:
 ```bash
 http://localhost:3000
 ```
+
+## Key docker commands
+
+- To check status of docker service: `docker compose ps`
+- To down a docker service: `docker compose down <service name>`
 
 ## Docker compose
 
