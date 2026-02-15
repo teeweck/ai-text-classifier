@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
 import joblib
 import os
+import time
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -42,19 +43,32 @@ class ModelInfoResponse(BaseModel):
 # Prediction endpoint
 @app.post("/predict")
 def predict(request: PredictionRequest):
-    # Vectorize input text
-    text_vector = vectorizer.transform([request.text])
+    start_time = time.perf_counter()
 
-    # Predict label
-    prediction = model.predict(text_vector)[0]
+    try:
+        # Vectorize input text
+        text_vector = vectorizer.transform([request.text])
 
-    # Get confidence
-    confidence = max(model.predict_proba(text_vector)[0])
+        # Predict label
+        prediction = model.predict(text_vector)[0]
 
-    return {
-        "prediction": prediction,
-        "confidence": round(confidence, 2)
-    }
+        # Get confidence
+        probability = model.predict_proba(text_vector)[0]
+        confidence = float(probability.max())
+
+        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+        return {
+            "prediction": prediction,
+            "confidence": round(confidence, 2),
+            "latency_ms": latency_ms,
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ïnference failed: {str(e)}"
+        )
 
 # Model information endpoint
 @app.get("/model-info", response_model=ModelInfoResponse) # response_model tells FastAPI the data shape
