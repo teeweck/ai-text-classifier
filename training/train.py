@@ -61,10 +61,6 @@ current_file_path = Path(__file__).resolve()
 current_directory = current_file_path.parent.parent
 new_dir = current_directory / f"backend/model/{MODEL_VERSION}"
 
-print(f"current file path: {current_file_path}")
-print(f"current directory: {current_directory}")
-print(f"Prospective directory: {new_dir}")
-
 try:
     new_dir.mkdir()
     print(f"Folder '{new_dir}' created.")

@@ -2,17 +2,35 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
 import joblib
-import os
+from pathlib import Path
 import time
 
 from fastapi.middleware.cors import CORSMiddleware
 
-model_file_path = os.path.dirname(__file__) + "/model/model.pkl"
-vectorizer_file_path = os.path.dirname(__file__) + "/model/vectorizer.pkl"
+MODEL_VERSION = "v1"
+
+# Use relative paths from the working directory (which is /app in Docker)
+model_dir = Path("model") / MODEL_VERSION
+
+artifact_path = model_dir / "artifact.pkl"
+model_file_path = model_dir / "model.pkl"
+vectorizer_file_path = model_dir / "vectorizer.pkl"
+
+print(f"artifact_path: {artifact_path}")
+print(f"model_path: {model_file_path}")
+print(f"vectorizer_file_path: {vectorizer_file_path}")
 
 # Load model and vectorizer at startup
+artifact = joblib.load(artifact_path)
 model = joblib.load(model_file_path)
 vectorizer = joblib.load(vectorizer_file_path)
+
+# Init model artifact information
+model_name = artifact["model"]
+vectorizer_name = artifact["vectorizer"]
+labels = artifact["labels"]
+sklearn_version = artifact["sklearn_version"]
+model_created_at = artifact["created_at"]
 
 app = FastAPI(title="AI Text Classifier")
 
@@ -39,6 +57,8 @@ class ModelInfoResponse(BaseModel):
     labels:List[str]
     vectorizer: str
     version: str
+    sklearn_version: str
+    created_at: str
 
 # Prediction endpoint
 @app.post("/predict")
@@ -75,9 +95,11 @@ def predict(request: PredictionRequest):
 def get_model_info():
     return {
         "model_type": type(model).__name__,
-        "labels": list(model.classes_),
-        "vectorizer": "TF-IDF",
-        "version": "1.0.0"
+        "labels": labels,
+        "vectorizer": type(vectorizer).__name__,
+        "version": artifact["version"],
+        "sklearn_version": sklearn_version,
+        "created_at": model_created_at
     }
 
 # Backend health API
