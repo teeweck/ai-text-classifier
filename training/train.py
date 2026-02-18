@@ -3,6 +3,7 @@ import joblib
 import sklearn
 from datetime import datetime
 from pathlib import Path
+import os
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -46,7 +47,7 @@ print(f"Accuracy: {accuracy:.2f}")
 print(classification_report(y_test, predictions))
 
 # Save Model artifacts
-MODEL_VERSION = "v1"
+MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
 
 artifact = {
     "model": model,

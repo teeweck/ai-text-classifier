@@ -3,11 +3,12 @@ from pydantic import BaseModel, Field
 from typing import List
 import joblib
 from pathlib import Path
+import os
 import time
 
 from fastapi.middleware.cors import CORSMiddleware
 
-MODEL_VERSION = "v1"
+MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
 
 # Get the directory of the current script
 script_directory = Path(__file__).resolve().parent

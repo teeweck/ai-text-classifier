@@ -1,6 +1,8 @@
 # Node base image
 FROM node:18-alpine
 
+ENV MODEL_VERSION=v1
+
 WORKDIR /app
 
 # Install React dependencies
