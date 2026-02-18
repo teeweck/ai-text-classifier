@@ -9,12 +9,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 MODEL_VERSION = "v1"
 
-# Use relative paths from the working directory (which is /app in Docker)
-model_dir = Path("model") / MODEL_VERSION
+# Get the directory of the current script
+script_directory = Path(__file__).resolve().parent
+script_directory = script_directory / f"model/{MODEL_VERSION}"
 
-artifact_path = model_dir / "artifact.pkl"
-model_file_path = model_dir / "model.pkl"
-vectorizer_file_path = model_dir / "vectorizer.pkl"
+print(f"Current file's directory: {script_directory}")
+
+artifact_path = script_directory / "artifact.pkl"
+model_file_path = script_directory / "model.pkl"
+vectorizer_file_path = script_directory / "vectorizer.pkl"
 
 print(f"artifact_path: {artifact_path}")
 print(f"model_path: {model_file_path}")
