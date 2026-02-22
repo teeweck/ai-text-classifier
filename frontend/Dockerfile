@@ -1,7 +1,7 @@
 # Node base image
 FROM node:18-alpine
 
-ENV MODEL_VERSION=v1
+ENV MODEL_VERSION=v2
 
 WORKDIR /app
 

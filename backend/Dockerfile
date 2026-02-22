@@ -1,7 +1,7 @@
 # 1️⃣ Base image
 FROM python:3.13-slim
 
-ENV MODEL_VERSION=v1
+ENV MODEL_VERSION=v2
 
 # 2️⃣ Set working directory inside container
 WORKDIR /app

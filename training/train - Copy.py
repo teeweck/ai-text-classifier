@@ -3,6 +3,7 @@ import joblib
 import sklearn
 from datetime import datetime
 from pathlib import Path
+import os
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -10,10 +11,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 
 # Load dataset
-data = pd.read_csv("data/raw/sentiment_data.csv")
+data = pd.read_csv("data/raw/sentiment.csv")
 
-texts = data["Comment"]
-labels = data["Sentiment"]
+texts = data["text"]
+labels = data["label"]
 
 # Train/test split
 X_train, X_test, y_train, y_test = train_test_split(
@@ -29,10 +30,6 @@ vectorizer = TfidfVectorizer(
     stop_words="english",
     max_features=5000
 )
-
-# Fill blank inputs for training and test dataset
-X_train = X_train.fillna("").astype(str)
-X_test = X_test.fillna("").astype(str)
 
 X_train_vec = vectorizer.fit_transform(X_train)
 X_test_vec = vectorizer.transform(X_test)
@@ -50,14 +47,12 @@ print(f"Accuracy: {accuracy:.2f}")
 print(classification_report(y_test, predictions))
 
 # Save Model artifacts
-MODEL_VERSION = "v2"
-
-labels_str = [str(label) for label in model.classes_.tolist()]
+MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
 
 artifact = {
     "model": model,
     "vectorizer": vectorizer,
-    "labels": labels_str,
+    "labels": model.classes_.tolist(),
     "sklearn_version": sklearn.__version__,
     "created_at": datetime.now().isoformat(),
     "version": MODEL_VERSION,
