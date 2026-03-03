@@ -68,13 +68,13 @@ class ModelInfoResponse(BaseModel):
 @app.post("/predict")
 def predict(request: PredictionRequest):
     start_time = time.perf_counter()
-
+    sentiments_str = ["Negative", "Neutral", "Positive"]
     try:
         # Vectorize input text
         text_vector = vectorizer.transform([request.text])
 
         # Predict label
-        prediction = model.predict(text_vector)[0]
+        prediction = sentiments_str[model.predict(text_vector)[0]]
 
         # Get confidence
         probability = model.predict_proba(text_vector)[0]
