@@ -30,10 +30,6 @@ vectorizer = TfidfVectorizer(
     max_features=5000
 )
 
-# Fill blank inputs for training and test dataset
-X_train = X_train.fillna("").astype(str)
-X_test = X_test.fillna("").astype(str)
-
 X_train_vec = vectorizer.fit_transform(X_train)
 X_test_vec = vectorizer.transform(X_test)
 
