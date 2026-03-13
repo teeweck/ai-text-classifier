@@ -1,5 +1,7 @@
 import pandas as pd
 import joblib
+import mlflow
+import mlflow.sklearn
 import sklearn
 from datetime import datetime
 from pathlib import Path
@@ -7,10 +9,13 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, f1_score
 
 # Load dataset
 data = pd.read_csv("data/raw/sentiment_data.csv")
+
+sentiment_counts = data['Sentiment'].value_counts()
+print(f"Sentiment counts:\n{sentiment_counts}")
 
 texts = data["Comment"]
 labels = data["Sentiment"]
@@ -33,17 +38,39 @@ vectorizer = TfidfVectorizer(
 X_train_vec = vectorizer.fit_transform(X_train)
 X_test_vec = vectorizer.transform(X_test)
 
-# Model training
-model = LogisticRegression(max_iter=1000)
-model.fit(X_train_vec, y_train)
+# Set experiment name
+mlflow.set_experiment("text-classifier")
 
-# Model evaluation
-predictions = model.predict(X_test_vec)
+# Model parameters
+max_model_iter = 1000
 
-accuracy = accuracy_score(y_test, predictions)
-print(f"Accuracy: {accuracy:.2f}")
+with mlflow.start_run():
+    # Model training
+    model = LogisticRegression(max_iter=max_model_iter)
+    model.fit(X_train_vec, y_train)
 
-print(classification_report(y_test, predictions))
+    # Model evaluation
+    predictions = model.predict(X_test_vec)
+
+    accuracy = accuracy_score(y_test, predictions)
+    f1 = f1_score(y_test, predictions, average='weighted')
+
+    # Log parameters
+    mlflow.log_param("model_type", "LogisticRegression")
+    mlflow.log_param("max_iter", max_model_iter)
+    mlflow.log_param("vectorizer", "TF-IDF")
+    mlflow.log_param("sklearn_version", sklearn.__version__)
+
+    # Log metrics
+    mlflow.log_metric("accuracy", float(accuracy))
+    mlflow.log_metric("f1_score", float(f1))
+
+    # Log model artifact
+    mlflow.sklearn.log_model(model, name="sentiment analysis model")
+
+    print(f"Accuracy: {accuracy:.2f}")
+    print(f"f1: {f1:.2f}")
+    print(classification_report(y_test, predictions))
 
 # Save Model artifacts
 MODEL_VERSION = "v2"
