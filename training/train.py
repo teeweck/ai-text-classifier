@@ -1,7 +1,7 @@
 import pandas as pd
 import joblib
 import mlflow
-import mlflow.sklearn
+import mlflow.sklearn as mlflowSklearn
 import sklearn
 from datetime import datetime
 from pathlib import Path
@@ -10,6 +10,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, f1_score
+
+# Get program local directory
+current_file_path = Path(__file__).resolve()
+current_directory = current_file_path.parent
 
 # Load dataset
 data = pd.read_csv("data/raw/sentiment_data.csv")
@@ -70,7 +74,13 @@ with mlflow.start_run():
     mlflow.log_metric("f1_score", float(f1))
 
     # Log model artifact
-    mlflow.sklearn.log_model(model, name="sentiment analysis model")
+    req_path = current_directory / f"requirements.txt"
+    mlflowSklearn.log_model(
+        model, 
+        name="sentiment analysis model", 
+        serialization_format='skops',
+        pip_requirements=[f"-r {req_path}"],
+    )
 
     print(f"Accuracy: {accuracy:.2f}")
     print(f"f1: {f1:.2f}")
@@ -90,9 +100,9 @@ artifact = {
     "version": MODEL_VERSION,
 }
 
-current_file_path = Path(__file__).resolve()
-current_directory = current_file_path.parent.parent
-new_dir = current_directory / f"backend/model/{MODEL_VERSION}"
+# current_file_path = Path(__file__).resolve()
+root_directory = current_directory.parent
+new_dir = root_directory / f"backend/model/{MODEL_VERSION}"
 
 try:
     new_dir.mkdir()
