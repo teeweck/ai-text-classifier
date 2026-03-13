@@ -14,6 +14,10 @@ from sklearn.metrics import accuracy_score, classification_report, f1_score
 # Load dataset
 data = pd.read_csv("data/raw/sentiment_data.csv")
 
+# Sentiment mapping
+# 0 — Negative
+# 1 — Neutral
+# 2 — Positive
 sentiment_counts = data['Sentiment'].value_counts()
 print(f"Sentiment counts:\n{sentiment_counts}")
 
