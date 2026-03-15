@@ -62,6 +62,11 @@ Pydantic Model = Contract\
 FastAPI = Glue\
 Swagger UI = Visualization
 
+## Locally run backend
+
+Command to run backend (app.py) locally:
+`uvicorn backend.app:app --reload --port 8000`
+
 ## Docker for backend
 
 Building the Docker Image:
