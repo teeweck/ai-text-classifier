@@ -51,6 +51,7 @@ mlflow.set_experiment("text-classifier")
 
 # Model parameters
 max_model_iter = 1000
+MODEL_NAME = "text-classifier"
 
 with mlflow.start_run():
     # Model training
@@ -80,37 +81,38 @@ with mlflow.start_run():
         name="sentiment analysis model", 
         serialization_format='skops',
         pip_requirements=[f"-r {req_path}"],
+        registered_model_name=MODEL_NAME
     )
 
     print(f"Accuracy: {accuracy:.2f}")
     print(f"f1: {f1:.2f}")
     print(classification_report(y_test, predictions))
 
-# Save Model artifacts
-MODEL_VERSION = "v2"
+    # Save Model artifacts
+    MODEL_VERSION = "v2"
 
-labels_str = [str(label) for label in model.classes_.tolist()]
+    labels_str = [str(label) for label in model.classes_.tolist()]
 
-artifact = {
-    "model": model,
-    "vectorizer": vectorizer,
-    "labels": labels_str,
-    "sklearn_version": sklearn.__version__,
-    "created_at": datetime.now().isoformat(),
-    "version": MODEL_VERSION,
-}
+    artifact = {
+        "model": model,
+        "vectorizer": vectorizer,
+        "labels": labels_str,
+        "sklearn_version": sklearn.__version__,
+        "created_at": datetime.now().isoformat(),
+        "version": MODEL_VERSION,
+    }
 
-# current_file_path = Path(__file__).resolve()
-root_directory = current_directory.parent
-new_dir = root_directory / f"backend/model/{MODEL_VERSION}"
+    # current_file_path = Path(__file__).resolve()
+    root_directory = current_directory.parent
+    new_dir = root_directory / f"backend/model/{MODEL_VERSION}"
 
-try:
-    new_dir.mkdir()
-    print(f"Folder '{new_dir}' created.")
-except:
-    print(f"Folder '{new_dir}' already exists.")
+    try:
+        new_dir.mkdir()
+        print(f"Folder '{new_dir}' created.")
+    except:
+        print(f"Folder '{new_dir}' already exists.")
 
-joblib.dump(artifact, f"{new_dir}/artifact.pkl")
-joblib.dump(model, f"{new_dir}/model.pkl")
-joblib.dump(vectorizer, f"{new_dir}/vectorizer.pkl")
-print("Model,vectorizer and artifacts saved successfully.")
+    joblib.dump(artifact, f"{new_dir}/artifact.pkl")
+    joblib.dump(model, f"{new_dir}/model.pkl")
+    joblib.dump(vectorizer, f"{new_dir}/vectorizer.pkl")
+    print("Model,vectorizer and artifacts saved successfully.")
