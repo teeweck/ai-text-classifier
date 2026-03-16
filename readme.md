@@ -67,6 +67,9 @@ Swagger UI = Visualization
 Command to run backend (app.py) locally:
 `uvicorn backend.app:app --reload --port 8000`
 
+Alternative command to run backend (app.py) locally:
+`fastapi run .\backend\app.py`
+
 ## Docker for backend
 
 Building the Docker Image:

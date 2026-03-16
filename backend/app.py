@@ -6,9 +6,16 @@ from pathlib import Path
 import os
 import time
 
+import mlflow
+import mlflow.sklearn as mlflowSklearn
+
 from fastapi.middleware.cors import CORSMiddleware
 
-MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
+# MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
+MODEL_VERSION = "v2"
+mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+MODEL_NAME = "text-classifier"
+MODEL_STAGE = "Production"
 
 # Get the directory of the current script
 script_directory = Path(__file__).resolve().parent
@@ -17,16 +24,20 @@ script_directory = script_directory / f"model/{MODEL_VERSION}"
 print(f"Current file's directory: {script_directory}")
 
 artifact_path = script_directory / "artifact.pkl"
-model_file_path = script_directory / "model.pkl"
+# model_file_path = script_directory / "model.pkl"
 vectorizer_file_path = script_directory / "vectorizer.pkl"
 
+model_uri = f"models:/{MODEL_NAME}/{MODEL_STAGE}"
+
 print(f"artifact_path: {artifact_path}")
-print(f"model_path: {model_file_path}")
+# print(f"model_path: {model_file_path}")
+print(f"model_uri: {model_uri}")
 print(f"vectorizer_file_path: {vectorizer_file_path}")
 
 # Load model and vectorizer at startup
 artifact = joblib.load(artifact_path)
-model = joblib.load(model_file_path)
+# model = joblib.load(model_file_path)
+model = mlflowSklearn.load_model(model_uri)
 vectorizer = joblib.load(vectorizer_file_path)
 
 # Init model artifact information
@@ -70,6 +81,9 @@ def predict(request: PredictionRequest):
     start_time = time.perf_counter()
     sentiments_str = ["Negative", "Neutral", "Positive"]
     try:
+        if model is None:
+            raise HTTPException(status_code=500, detail="Model is not loaded.")
+
         # Vectorize input text
         text_vector = vectorizer.transform([request.text])
 

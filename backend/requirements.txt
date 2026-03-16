@@ -3,8 +3,9 @@ pandas
 joblib
 
 # Model training dependencies
-scikit-learn
+scikit-learn==1.8.0
 
 # Backend dependencies
 fastapi # API framework
 uvicorn # Asynchronous Server Gateway Interface(ASGI) server
+mlflow==3.10.0
