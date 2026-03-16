@@ -6,6 +6,6 @@ joblib
 scikit-learn==1.8.0
 
 # Backend dependencies
-fastapi # API framework
-uvicorn # Asynchronous Server Gateway Interface(ASGI) server
+fastapi==0.0.24 # API framework
+uvicorn==0.40.0 # Asynchronous Server Gateway Interface(ASGI) server
 mlflow==3.10.0

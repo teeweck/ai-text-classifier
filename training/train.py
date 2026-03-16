@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, f1_score
+from sklearn.pipeline import Pipeline
 
 # Get program local directory
 current_file_path = Path(__file__).resolve()
@@ -52,17 +53,31 @@ mlflow.set_experiment("text-classifier")
 # Model parameters
 max_model_iter = 1000
 MODEL_NAME = "text-classifier"
+mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+
+pipeline = Pipeline([
+    ("vectorizer", TfidfVectorizer()),
+    ("classifier", LogisticRegression(max_iter=max_model_iter))
+])
+
+pipeline.fit(X_train, y_train)
+
+predictions = pipeline.predict(X_test)
+
+accuracy = accuracy_score(y_test, predictions)
+f1 = f1_score(y_test, predictions, average='weighted')
+
+print(f"Model accuracy: {accuracy}")
 
 with mlflow.start_run():
-    # Model training
-    model = LogisticRegression(max_iter=max_model_iter)
-    model.fit(X_train_vec, y_train)
-
-    # Model evaluation
-    predictions = model.predict(X_test_vec)
-
-    accuracy = accuracy_score(y_test, predictions)
-    f1 = f1_score(y_test, predictions, average='weighted')
+    req_path = current_directory / f"requirements.txt"
+    mlflowSklearn.log_model(
+        pipeline, 
+        name="sentiment analysis model", 
+        serialization_format='skops',
+        pip_requirements=[f"-r {req_path}"],
+        registered_model_name=MODEL_NAME
+    )
 
     # Log parameters
     mlflow.log_param("model_type", "LogisticRegression")
@@ -74,19 +89,10 @@ with mlflow.start_run():
     mlflow.log_metric("accuracy", float(accuracy))
     mlflow.log_metric("f1_score", float(f1))
 
-    # Log model artifact
-    req_path = current_directory / f"requirements.txt"
-    mlflowSklearn.log_model(
-        model, 
-        name="sentiment analysis model", 
-        serialization_format='skops',
-        pip_requirements=[f"-r {req_path}"],
-        registered_model_name=MODEL_NAME
-    )
-
-    print(f"Accuracy: {accuracy:.2f}")
-    print(f"f1: {f1:.2f}")
-    print(classification_report(y_test, predictions))
+print(f"Accuracy: {accuracy:.2f}")
+print(f"f1: {f1:.2f}")
+print(classification_report(y_test, predictions))
+print("Training complete")
 
     # # Save Model artifacts
     # MODEL_VERSION = "v2"
@@ -115,4 +121,4 @@ with mlflow.start_run():
     # joblib.dump(artifact, f"{new_dir}/artifact.pkl")
     # joblib.dump(model, f"{new_dir}/model.pkl")
     # joblib.dump(vectorizer, f"{new_dir}/vectorizer.pkl")
-    print("Model,vectorizer and artifacts saved successfully.")
+    # print("Model,vectorizer and artifacts saved successfully.")
