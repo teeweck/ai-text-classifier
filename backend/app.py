@@ -1,9 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
-import joblib
-from pathlib import Path
-import os
 import time
 
 import mlflow
@@ -18,25 +15,11 @@ mlflow.set_tracking_uri("http://127.0.0.1:5000/")
 MODEL_NAME = "text-classifier"
 MODEL_STAGE = "Production"
 
-# Get the directory of the current script
-script_directory = Path(__file__).resolve().parent
-script_directory = script_directory / f"model/{MODEL_VERSION}"
-
-print(f"Current file's directory: {script_directory}")
-
-# model_file_path = script_directory / "model.pkl"
-vectorizer_file_path = script_directory / "vectorizer.pkl"
-
 model_uri = f"models:/{MODEL_NAME}/{MODEL_STAGE}"
-
-# print(f"model_path: {model_file_path}")
 print(f"model_uri: {model_uri}")
-print(f"vectorizer_file_path: {vectorizer_file_path}")
 
 # Initialize the MlflowClient
 client = MlflowClient()
-
-# The stage you are interested in (e.g., "Production")
 stage = "Production"
 
 # model_versions is a list
@@ -53,10 +36,8 @@ for mv in model_versions:
         # print(f"Metrics: {run.data.metrics}")
         break
 
-# Load model and vectorizer at startup
-# model = joblib.load(model_file_path)
+# Load model pipeline at startup
 model = mlflowSklearn.load_model(model_uri)
-vectorizer = joblib.load(vectorizer_file_path)
 
 app = FastAPI(title="AI Text Classifier")
 
@@ -140,5 +121,4 @@ def health():
     return {
         "status": "ok",
         "model_loaded": model is not None,
-        "vectorizer_loaded": vectorizer is not None,
     }
