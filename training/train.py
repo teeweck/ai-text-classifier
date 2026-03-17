@@ -1,5 +1,4 @@
 import pandas as pd
-import joblib
 import mlflow
 import mlflow.sklearn as mlflowSklearn
 import sklearn
@@ -24,7 +23,7 @@ data = pd.read_csv("data/raw/sentiment_data.csv")
 # 1 — Neutral
 # 2 — Positive
 sentiment_counts = data['Sentiment'].value_counts()
-print(f"Sentiment counts:\n{sentiment_counts}")
+# print(f"Sentiment counts:\n{sentiment_counts}")
 
 texts = data["Comment"]
 labels = data["Sentiment"]
@@ -49,6 +48,7 @@ X_test_vec = vectorizer.transform(X_test)
 
 # Set experiment name
 mlflow.set_experiment("text-classifier")
+saveModelToRegistry = False
 
 # Model parameters
 max_model_iter = 1000
@@ -71,19 +71,29 @@ print(f"Model accuracy: {accuracy}")
 
 with mlflow.start_run():
     req_path = current_directory / f"requirements.txt"
-    mlflowSklearn.log_model(
-        pipeline, 
-        name="sentiment analysis model", 
-        serialization_format='skops',
-        pip_requirements=[f"-r {req_path}"],
-        registered_model_name=MODEL_NAME
-    )
+    if (saveModelToRegistry == True):
+        mlflowSklearn.log_model(
+            pipeline, 
+            name="sentiment analysis model", 
+            serialization_format='skops',
+            pip_requirements=[f"-r {req_path}"],
+            registered_model_name=MODEL_NAME
+        )
+    else:
+        print("Trained model not saved into registry")
+
+    vectorizer_type = type(pipeline.named_steps["vectorizer"]).__name__
+    classifier_type = type(pipeline.named_steps["classifier"]).__name__
+
+    labels_str = [str(label) for label in sentiment_counts.keys()][::-1]
 
     # Log parameters
-    mlflow.log_param("model_type", "LogisticRegression")
+    mlflow.log_param("model_type", classifier_type)
     mlflow.log_param("max_iter", max_model_iter)
-    mlflow.log_param("vectorizer", "TF-IDF")
+    mlflow.log_param("vectorizer", vectorizer_type)
+    mlflow.log_param("labels", labels_str)
     mlflow.log_param("sklearn_version", sklearn.__version__)
+    mlflow.log_param("created_at", datetime.now().isoformat())
 
     # Log metrics
     mlflow.log_metric("accuracy", float(accuracy))
@@ -92,33 +102,4 @@ with mlflow.start_run():
 print(f"Accuracy: {accuracy:.2f}")
 print(f"f1: {f1:.2f}")
 print(classification_report(y_test, predictions))
-print("Training complete")
-
-    # # Save Model artifacts
-    # MODEL_VERSION = "v2"
-
-    # labels_str = [str(label) for label in model.classes_.tolist()]
-
-    # artifact = {
-    #     "model": model,
-    #     "vectorizer": vectorizer,
-    #     "labels": labels_str,
-    #     "sklearn_version": sklearn.__version__,
-    #     "created_at": datetime.now().isoformat(),
-    #     "version": MODEL_VERSION,
-    # }
-
-    # # current_file_path = Path(__file__).resolve()
-    # root_directory = current_directory.parent
-    # new_dir = root_directory / f"backend/model/{MODEL_VERSION}"
-
-    # try:
-    #     new_dir.mkdir()
-    #     print(f"Folder '{new_dir}' created.")
-    # except:
-    #     print(f"Folder '{new_dir}' already exists.")
-
-    # joblib.dump(artifact, f"{new_dir}/artifact.pkl")
-    # joblib.dump(model, f"{new_dir}/model.pkl")
-    # joblib.dump(vectorizer, f"{new_dir}/vectorizer.pkl")
-    # print("Model,vectorizer and artifacts saved successfully.")
+print("Training complete")  
