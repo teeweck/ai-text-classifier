@@ -46,7 +46,7 @@ for mv in model_versions:
         MODEL_VERSION = mv.version
         run_id = mv.run_id
         if run_id == None:
-            raise HTTPException(status_code=500, detail=f"run_id not found")
+            raise HTTPException(status_code=400, detail=f"run_id not found")
         run = client.get_run(run_id)
         # print(f"Run ID: {run.info.run_id}")
         # print(f"Parameters: {run.data.params}")
