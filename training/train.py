@@ -85,13 +85,14 @@ with mlflow.start_run():
     vectorizer_type = type(pipeline.named_steps["vectorizer"]).__name__
     classifier_type = type(pipeline.named_steps["classifier"]).__name__
 
-    labels_str = [str(label) for label in sentiment_counts.keys()][::-1]
+    labels_str = [label for label in sentiment_counts.keys()][::-1]
+    print(str(labels_str)[1:-1])
 
     # Log parameters
     mlflow.log_param("model_type", classifier_type)
     mlflow.log_param("max_iter", max_model_iter)
     mlflow.log_param("vectorizer", vectorizer_type)
-    mlflow.log_param("labels", labels_str)
+    mlflow.log_param("labels", str(labels_str)[1:-1])
     mlflow.log_param("sklearn_version", sklearn.__version__)
     mlflow.log_param("created_at", datetime.now().isoformat())
 

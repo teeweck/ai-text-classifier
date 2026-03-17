@@ -8,11 +8,12 @@ import time
 
 import mlflow
 import mlflow.sklearn as mlflowSklearn
+from mlflow.tracking import MlflowClient
 
 from fastapi.middleware.cors import CORSMiddleware
 
 # MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
-MODEL_VERSION = "v2"
+MODEL_VERSION = "v1"
 mlflow.set_tracking_uri("http://127.0.0.1:5000/")
 MODEL_NAME = "text-classifier"
 MODEL_STAGE = "Production"
@@ -23,29 +24,39 @@ script_directory = script_directory / f"model/{MODEL_VERSION}"
 
 print(f"Current file's directory: {script_directory}")
 
-artifact_path = script_directory / "artifact.pkl"
 # model_file_path = script_directory / "model.pkl"
 vectorizer_file_path = script_directory / "vectorizer.pkl"
 
 model_uri = f"models:/{MODEL_NAME}/{MODEL_STAGE}"
 
-print(f"artifact_path: {artifact_path}")
 # print(f"model_path: {model_file_path}")
 print(f"model_uri: {model_uri}")
 print(f"vectorizer_file_path: {vectorizer_file_path}")
 
+# Initialize the MlflowClient
+client = MlflowClient()
+
+# The stage you are interested in (e.g., "Production")
+stage = "Production"
+
+# model_versions is a list
+model_versions = client.search_model_versions(f"name='{MODEL_NAME}'")
+for mv in model_versions:
+    if mv.current_stage == "Production":
+        MODEL_VERSION = mv.version
+        run_id = mv.run_id
+        if run_id == None:
+            raise HTTPException(status_code=500, detail=f"run_id not found")
+        run = client.get_run(run_id)
+        # print(f"Run ID: {run.info.run_id}")
+        # print(f"Parameters: {run.data.params}")
+        # print(f"Metrics: {run.data.metrics}")
+        break
+
 # Load model and vectorizer at startup
-artifact = joblib.load(artifact_path)
 # model = joblib.load(model_file_path)
 model = mlflowSklearn.load_model(model_uri)
 vectorizer = joblib.load(vectorizer_file_path)
-
-# Init model artifact information
-model_name = artifact["model"]
-vectorizer_name = artifact["vectorizer"]
-labels = artifact["labels"]
-sklearn_version = artifact["sklearn_version"]
-model_created_at = artifact["created_at"]
 
 app = FastAPI(title="AI Text Classifier")
 
@@ -111,13 +122,14 @@ def predict(request: PredictionRequest):
 # Model information endpoint
 @app.get("/model-info", response_model=ModelInfoResponse) # response_model tells FastAPI the data shape
 def get_model_info():
+    model_artifacts = run.data.params
     return {
-        "model_type": type(model).__name__,
-        "labels": labels,
-        "vectorizer": type(vectorizer).__name__,
-        "version": artifact["version"],
-        "sklearn_version": sklearn_version,
-        "created_at": model_created_at
+        "model_type": model_artifacts["model_type"],
+        "labels": model_artifacts["labels"].split(", "),
+        "vectorizer": model_artifacts["vectorizer"],
+        "version": MODEL_VERSION,
+        "sklearn_version": model_artifacts["sklearn_version"],
+        "created_at": model_artifacts["created_at"]
     }
 
 # Backend health API
