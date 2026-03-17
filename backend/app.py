@@ -96,10 +96,12 @@ def predict(request: PredictionRequest):
             raise HTTPException(status_code=500, detail="Model is not loaded.")
 
         # Vectorize input text
-        text_vector = vectorizer.transform([request.text])
+        # text_vector = vectorizer.transform([request.text])
+        text_vector = [request.text]
 
         # Predict label
-        prediction = sentiments_str[model.predict(text_vector)[0]]
+        prediction_ind = model.predict(text_vector)[0]
+        prediction = sentiments_str[prediction_ind]
 
         # Get confidence
         probability = model.predict_proba(text_vector)[0]
