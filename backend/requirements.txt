@@ -9,3 +9,7 @@ scikit-learn==1.8.0
 fastapi==0.0.24 # API framework
 uvicorn==0.40.0 # Asynchronous Server Gateway Interface(ASGI) server
 mlflow==3.10.0
+
+# Unit testing libraries
+pytest
+requests
