@@ -16,7 +16,8 @@ current_file_path = Path(__file__).resolve()
 current_directory = current_file_path.parent
 
 # Load dataset
-data = pd.read_csv("data/raw/sentiment_data.csv")
+dataset_location = "data/raw/sentiment_data.csv"
+data = pd.read_csv(dataset_location)
 
 # Sentiment mapping
 # 0 — Negative
@@ -42,9 +43,6 @@ vectorizer = TfidfVectorizer(
     stop_words="english",
     max_features=5000
 )
-
-X_train_vec = vectorizer.fit_transform(X_train)
-X_test_vec = vectorizer.transform(X_test)
 
 # Set experiment name
 mlflow.set_experiment("text-classifier")
@@ -99,6 +97,9 @@ with mlflow.start_run():
     # Log metrics
     mlflow.log_metric("accuracy", float(accuracy))
     mlflow.log_metric("f1_score", float(f1))
+
+    # Log training dataset
+    mlflow.log_artifact(dataset_location)
 
 print(f"Accuracy: {accuracy:.2f}")
 print(f"f1: {f1:.2f}")
