@@ -9,7 +9,6 @@ from mlflow.tracking import MlflowClient
 
 from fastapi.middleware.cors import CORSMiddleware
 
-# MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
 MODEL_VERSION = "v1"
 mlflow.set_tracking_uri("http://127.0.0.1:5000/")
 MODEL_NAME = "text-classifier"
@@ -76,16 +75,14 @@ def predict(request: PredictionRequest):
         if model is None:
             raise HTTPException(status_code=500, detail="Model is not loaded.")
 
-        # Vectorize input text
-        # text_vector = vectorizer.transform([request.text])
-        text_vector = [request.text]
+        model_input = [request.text]
 
         # Predict label
-        prediction_ind = model.predict(text_vector)[0]
+        prediction_ind = model.predict(model_input)[0]
         prediction = sentiments_str[prediction_ind]
 
         # Get confidence
-        probability = model.predict_proba(text_vector)[0]
+        probability = model.predict_proba(model_input)[0]
         confidence = float(probability.max())
 
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
