@@ -1,39 +1,52 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel, Field
 from typing import List
 import time
+import sys
 
 import mlflow
 import mlflow.sklearn as mlflowSklearn
 from mlflow.tracking import MlflowClient
-
-from fastapi.middleware.cors import CORSMiddleware
+from mlflow.exceptions import RestException
 
 MODEL_VERSION = "v1"
-mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+SERVER_URL = "http://127.0.0.1:5000/"
 MODEL_NAME = "text-classifier"
 MODEL_STAGE = "Production"
 
+mlflow.set_tracking_uri(SERVER_URL)
 model_uri = f"models:/{MODEL_NAME}/{MODEL_STAGE}"
 print(f"model_uri: {model_uri}")
 
 # Initialize the MlflowClient
 client = MlflowClient()
-stage = "Production"
 
-# model_versions is a list
-model_versions = client.search_model_versions(f"name='{MODEL_NAME}'")
-for mv in model_versions:
-    if mv.current_stage == "Production":
-        MODEL_VERSION = mv.version
-        run_id = mv.run_id
-        if run_id == None:
-            raise HTTPException(status_code=400, detail=f"run_id not found")
-        run = client.get_run(run_id)
-        # print(f"Run ID: {run.info.run_id}")
-        # print(f"Parameters: {run.data.params}")
-        # print(f"Metrics: {run.data.metrics}")
-        break
+try:
+    client = MlflowClient()
+    model_versions = client.search_model_versions(f"name='{MODEL_NAME}'")
+    found = False
+    for mv in model_versions:
+        if mv.current_stage == MODEL_STAGE:
+            MODEL_VERSION = mv.version
+            run_id = mv.run_id
+            if run_id is None:
+                print("run_id not found for the model in Production stage.")
+                sys.exit(1)
+            run = client.get_run(run_id)
+            found = True
+            break
+    if not found:
+        print(f"No model named '{MODEL_NAME}' in Production stage found in MLflow registry.")
+        sys.exit(1)
+except RestException as e:
+    print(f"MLflow error: {e}")
+    print(f"Registered Model with name={MODEL_NAME} not found. Exiting.")
+    sys.exit(1)
+except Exception as e:
+    print(f"Unexpected error: {e}")
+    sys.exit(1)
 
 # Load model pipeline at startup
 model = mlflowSklearn.load_model(model_uri)
