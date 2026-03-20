@@ -136,3 +136,14 @@ Docker will:
 2. Build frontend image
 3. Created shared network
 4. Start both containers
+
+## MLFlow
+
+MLflow is an open-source platform that helps streamline and organize the process of developing, tracking, and deploying machine learning models.
+
+MLFlow server needs to be run to provide backend with access to the ML model.
+
+Command to run MLFlow server:\
+`mlflow server --host 127.0.0.1 --port 5000`\
+-or- \
+`mlflow ui`
