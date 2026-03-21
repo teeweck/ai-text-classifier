@@ -5,6 +5,9 @@ import sklearn
 from datetime import datetime
 from pathlib import Path
 
+from mlflow.models.signature import ModelSignature
+from mlflow.types.schema import Schema, ColSpec
+
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -65,7 +68,19 @@ predictions = pipeline.predict(X_test)
 accuracy = accuracy_score(y_test, predictions)
 f1 = f1_score(y_test, predictions, average='weighted')
 
-print(f"Model accuracy: {accuracy}")
+# Define the input schema (the features)
+input_schema = Schema([
+    ColSpec("string", "text", required=True) # Optional field
+])
+
+# Define the output schema (the prediction)
+output_schema = Schema([
+    ColSpec("integer", "prediction"),
+    ColSpec("double", "confidence"),
+    ColSpec("double", "latency_ms")
+])
+
+signature = ModelSignature(inputs=input_schema, outputs=output_schema)
 
 with mlflow.start_run():
     req_path = current_directory / f"requirements.txt"
@@ -75,7 +90,8 @@ with mlflow.start_run():
             name="sentiment analysis model", 
             serialization_format='skops',
             pip_requirements=[f"-r {req_path}"],
-            registered_model_name=MODEL_NAME
+            registered_model_name=MODEL_NAME,
+            signature=signature,
         )
     else:
         print("Trained model not saved into registry")
