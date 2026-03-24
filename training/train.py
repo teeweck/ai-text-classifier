@@ -4,6 +4,7 @@ import mlflow.sklearn as mlflowSklearn
 import sklearn
 from datetime import datetime
 from pathlib import Path
+import json
 
 from mlflow.models.signature import ModelSignature
 from mlflow.types.schema import Schema, ColSpec
@@ -18,16 +19,27 @@ from sklearn.pipeline import Pipeline
 current_file_path = Path(__file__).resolve()
 current_directory = current_file_path.parent
 
+def load_config(file_path):
+    # Check if file exists to avoid errors
+    if not Path.exists(file_path):
+        print(f"Error: {file_path} not found.")
+        return None
+
+    with open(file_path, 'r') as file:
+        config = json.load(file)
+    return config
+
+config_data = load_config(current_directory / f"config.json")
+# Check if config was loaded successfully
+if config_data is None:
+    print("Error: Configuration file could not be loaded. Exiting.")
+    exit(1)
+
 # Load dataset
-dataset_location = "data/raw/sentiment_data.csv"
+dataset_location = config_data["app_settings"]["dataset_path"]
 data = pd.read_csv(dataset_location)
 
-# Sentiment mapping
-# 0 — Negative
-# 1 — Neutral
-# 2 — Positive
 sentiment_counts = data['Sentiment'].value_counts()
-# print(f"Sentiment counts:\n{sentiment_counts}")
 
 texts = data["Comment"]
 labels = data["Sentiment"]
@@ -48,13 +60,16 @@ vectorizer = TfidfVectorizer(
 )
 
 # Set experiment name
-mlflow.set_experiment("text-classifier")
+mlflow.set_experiment(config_data["model_config"]["model_name"])
 saveModelToRegistry = False
 
 # Model parameters
-max_model_iter = 1000
-MODEL_NAME = "text-classifier"
-mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+MODEL_NAME = config_data["model_config"]["model_name"]
+max_model_iter = config_data["model_config"]["max_model_iter"]
+
+mlflow_ip = config_data["model_config"]["mlflow_ip"]
+mlflow_port = config_data["model_config"]["mlflow_port"]
+mlflow.set_tracking_uri("http://" + f"{mlflow_ip}" + ":" + f"{mlflow_port}")
 
 pipeline = Pipeline([
     ("vectorizer", TfidfVectorizer()),
@@ -84,7 +99,7 @@ signature = ModelSignature(inputs=input_schema, outputs=output_schema)
 
 with mlflow.start_run():
     req_path = current_directory / f"requirements.txt"
-    if (saveModelToRegistry == True):
+    if (config_data["model_config"]["save_model"] == "true"):
         mlflowSklearn.log_model(
             pipeline, 
             name="sentiment analysis model", 
@@ -100,7 +115,6 @@ with mlflow.start_run():
     classifier_type = type(pipeline.named_steps["classifier"]).__name__
 
     labels_str = [label for label in sentiment_counts.keys()][::-1]
-    print(str(labels_str)[1:-1])
 
     # Log parameters
     mlflow.log_param("model_type", classifier_type)
@@ -117,7 +131,8 @@ with mlflow.start_run():
     # Log training dataset
     mlflow.log_artifact(dataset_location)
 
-print(f"Accuracy: {accuracy:.2f}")
-print(f"f1: {f1:.2f}")
-print(classification_report(y_test, predictions))
+if (config_data["app_settings"]["print_debug_msg"] == "true"):
+    print(f"Accuracy: {accuracy:.2f}")
+    print(f"f1: {f1:.2f}")
+    print(classification_report(y_test, predictions))
 print("Training complete")  

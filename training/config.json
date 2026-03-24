@@ -1,0 +1,14 @@
+{
+  "app_settings": {
+    "dataset_path": "data/raw/sentiment_data.csv",
+    "version": "1.0.0",
+    "print_debug_msg": "false"
+  },
+  "model_config": {
+    "model_name": "text-classifier",
+    "max_model_iter": 1000,
+    "mlflow_ip": "127.0.0.1",
+    "mlflow_port": 5000,
+    "save_model": "false"
+  }
+}
