@@ -6,9 +6,12 @@
   },
   "model_config": {
     "model_name": "text-classifier",
+    "model_stage": "Production",
     "max_model_iter": 1000,
     "mlflow_ip": "127.0.0.1",
     "mlflow_port": 5000,
+    "test_size": 0.2,
+    "random_state": 42,
     "save_model": "false",
     "accuracy_improvement_buf": 0.01
   }
