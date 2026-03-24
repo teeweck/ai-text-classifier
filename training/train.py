@@ -1,6 +1,7 @@
 import pandas as pd
 import mlflow
 import mlflow.sklearn as mlflowSklearn
+from mlflow.tracking import MlflowClient
 import sklearn
 from datetime import datetime
 from pathlib import Path
@@ -35,6 +36,36 @@ if config_data is None:
     print("Error: Configuration file could not be loaded. Exiting.")
     exit(1)
 
+def train_function():
+    print("train.py function")
+    return "train.py function"
+
+# Model parameters
+MODEL_NAME = config_data["model_config"]["model_name"]
+mlflow.set_experiment(MODEL_NAME)
+saveModelToRegistry = False
+max_model_iter = config_data["model_config"]["max_model_iter"]
+
+mlflow_ip = config_data["model_config"]["mlflow_ip"]
+mlflow_port = config_data["model_config"]["mlflow_port"]
+mlflow.set_tracking_uri("http://" + f"{mlflow_ip}" + ":" + f"{mlflow_port}")
+
+client = MlflowClient()
+production_versions = client.search_model_versions(f"name='{MODEL_NAME}'")
+
+production_accuracy = None
+
+for mv in production_versions:
+    if mv.current_stage == "Production":
+        MODEL_VERSION = mv.version
+        run_id = mv.run_id
+        if run_id is None:
+            print("run_id not found for the model in Production stage.")
+            exit(1)
+        run = client.get_run(run_id)
+        production_accuracy = run.data.metrics.get("accuracy")
+        break
+
 # Load dataset
 dataset_location = config_data["app_settings"]["dataset_path"]
 data = pd.read_csv(dataset_location)
@@ -59,18 +90,6 @@ vectorizer = TfidfVectorizer(
     max_features=5000
 )
 
-# Set experiment name
-mlflow.set_experiment(config_data["model_config"]["model_name"])
-saveModelToRegistry = False
-
-# Model parameters
-MODEL_NAME = config_data["model_config"]["model_name"]
-max_model_iter = config_data["model_config"]["max_model_iter"]
-
-mlflow_ip = config_data["model_config"]["mlflow_ip"]
-mlflow_port = config_data["model_config"]["mlflow_port"]
-mlflow.set_tracking_uri("http://" + f"{mlflow_ip}" + ":" + f"{mlflow_port}")
-
 pipeline = Pipeline([
     ("vectorizer", TfidfVectorizer()),
     ("classifier", LogisticRegression(max_iter=max_model_iter))
@@ -82,6 +101,17 @@ predictions = pipeline.predict(X_test)
 
 accuracy = accuracy_score(y_test, predictions)
 f1 = f1_score(y_test, predictions, average='weighted')
+
+should_promote = False
+
+if production_accuracy is None:
+    print("No production model found. Promoting new model.")
+    should_promote = True
+elif accuracy > production_accuracy + config_data["model_config"]["accuracy_improvement_buf"]:
+    print("New model is better. Promoting.")
+    should_promote = True
+else:
+    print("New model is worse. Keeping current production model.")
 
 # Define the input schema (the features)
 input_schema = Schema([
@@ -108,6 +138,14 @@ with mlflow.start_run():
             registered_model_name=MODEL_NAME,
             signature=signature,
         )
+        latest_version = client.search_model_versions(f"name='{MODEL_NAME}'")[0]
+        print(latest_version)
+        if should_promote:
+            client.transition_model_version_stage(
+                name=MODEL_NAME,
+                version=latest_version.version,
+                stage="Production"
+            )
     else:
         print("Trained model not saved into registry")
 

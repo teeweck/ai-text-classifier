@@ -9,6 +9,7 @@
     "max_model_iter": 1000,
     "mlflow_ip": "127.0.0.1",
     "mlflow_port": 5000,
-    "save_model": "false"
+    "save_model": "false",
+    "accuracy_improvement_buf": 0.01
   }
 }
