@@ -11,6 +11,8 @@ import mlflow.sklearn as mlflowSklearn
 from mlflow.tracking import MlflowClient
 from mlflow.exceptions import RestException
 
+from training.train import get_stage_latest_run
+
 MODEL_VERSION = "v1"
 SERVER_URL = "http://127.0.0.1:5000/"
 MODEL_NAME = "text-classifier"
@@ -27,16 +29,10 @@ try:
     client = MlflowClient()
     model_versions = client.search_model_versions(f"name='{MODEL_NAME}'")
     found = False
-    for mv in model_versions:
-        if mv.current_stage == MODEL_STAGE:
-            MODEL_VERSION = mv.version
-            run_id = mv.run_id
-            if run_id is None:
-                print("run_id not found for the model in Production stage.")
-                sys.exit(1)
-            run = client.get_run(run_id)
-            found = True
-            break
+    run = get_stage_latest_run(model_versions, MODEL_STAGE)
+    if run is not None:
+        found = True
+
     if not found:
         print(f"No model named '{MODEL_NAME}' in Production stage found in MLflow registry.")
         sys.exit(1)
