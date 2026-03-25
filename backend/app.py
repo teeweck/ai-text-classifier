@@ -14,7 +14,8 @@ from mlflow.exceptions import RestException
 from training.train import get_stage_latest_run
 
 MODEL_VERSION = "v1"
-SERVER_URL = "http://127.0.0.1:5000/"
+# SERVER_URL = "http://127.0.0.1:5000/" # Local mlflow ip address and port
+SERVER_URL = "http://mlflow:5000/" # TODO: get SERVER_URL from MLFLOW_TRACKING_URI environment variable if available
 MODEL_NAME = "text-classifier"
 MODEL_STAGE = "Production"
 
